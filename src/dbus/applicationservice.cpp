@@ -924,6 +924,7 @@ LaunchTask ApplicationService::unescapeExec(const QString &str, const QStringLis
         } break;
         case 'u': {
             if (fields.empty()) {
+                content.remove(codeStr);
                 break;
             }
             if (fields.count() > 1) {
@@ -951,12 +952,14 @@ LaunchTask ApplicationService::unescapeExec(const QString &str, const QStringLis
             auto val = m_entry->value(DesktopFileEntryKey, "Icon");
             if (!val) {
                 qDebug() << R"(Application Icons can't be found. %i will be ignored.)";
+                content.remove(codeStr);
                 break;
             }
 
             auto iconStr = toIconString(val.value());
             if (iconStr.isEmpty()) {
                 qDebug() << R"(Icons Convert to string failed. %i will be ignored.)";
+                content.remove(codeStr);
                 break;
             }
             content.replace(codeStr, QString("--icon") + " " + iconStr);
@@ -965,23 +968,27 @@ LaunchTask ApplicationService::unescapeExec(const QString &str, const QStringLis
             auto val = m_entry->value(DesktopFileEntryKey, "Name");
             if (!val) {
                 qDebug() << R"(Application Name can't be found. %c will be ignored.)";
+                content.remove(codeStr);
                 break;
             }
 
             const auto &rawValue = val.value();
             if (!rawValue.canConvert<QStringMap>()) {
                 qDebug() << "Name's underlying type mismatch:" << "QStringMap" << rawValue.metaType().name();
+                content.remove(codeStr);
                 break;
             }
 
             auto NameStr = toLocaleString(rawValue.value<QStringMap>(), getUserLocale());
             if (NameStr.isEmpty()) {
                 qDebug() << R"(Name Convert to locale string failed. %c will be ignored.)";
+                content.remove(codeStr);
                 break;
             }
             content.replace(codeStr, NameStr);
         } break;
         case 'k': {  // ignore all desktop file location for now.
+            content.remove(codeStr);
         } break;
         case 'd':
         case 'D':
@@ -990,6 +997,7 @@ LaunchTask ApplicationService::unescapeExec(const QString &str, const QStringLis
         case 'v':
             [[fallthrough]];  // Deprecated field codes should be removed from the command line and ignored.
         case 'm': {
+            content.remove(codeStr);
         } break;
         default: {
             qDebug() << "unrecognized file code.";
